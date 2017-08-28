@@ -9,7 +9,7 @@
 	<j:set var="claimTopMargin" value="${from.guiFailFont*0.2}px" />
 
 	<!-- JOB div -->
-	<div id="div-1" align="center" style="width:${width}; height:260%; min-height: 180px; float: ${float}; border-radius:15px;margin: 4px; background-color:${job.backgroundColor}; -moz-border-radius:10px;" tooltip="${job.name}">
+	<div id="div-1" align="center" style="width:${width}; height:260%; min-height: 195px; float: ${float}; border-radius:15px;margin: 4px; background-color:${job.backgroundColor}; -moz-border-radius:10px;" tooltip="${job.name}">
 		<div class="tagsParent">  <!--pooja -->
 			 <div class="env">
 			 	<span class="tagLabel">Current release tested : </span>
@@ -94,7 +94,7 @@
 			</div>
 			
 			<!-- Left side bar -->
-			<div id="div-3" style="margin:1%;width: 80%; height:100%; white-space: nowrap; overflow:hidden;  color: ${job.color};" >
+			<div id="div-3" style="margin:1%;width: 81%; height:100%; white-space: nowrap; overflow:hidden;  color: ${job.color};" >
 
 				<!-- Topic bar -->
 				<a target="_blank" href="${rootURL}/${job.url}" style="font-style:normal; font-weight:bold; height:${height}; color: inherit;">
