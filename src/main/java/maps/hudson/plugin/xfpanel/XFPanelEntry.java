@@ -15,6 +15,11 @@ import hudson.tasks.junit.TestResultAction;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.test.AbstractTestResultAction;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.URLConnection;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -22,10 +27,14 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import jenkins.model.Jenkins;
 import maps.hudson.plugin.xfpanel.XFPanelView.Blame;
+
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * Represents a job to be shown on the panel
@@ -169,8 +178,8 @@ public final class XFPanelEntry {
      *  @return 1 on success
      */
     public Boolean getShowResponsibles() {
-        if (getView().BlameState == XFPanelView.Blame.NOTATALL)
-            return false;
+//        if (getView().BlameState == XFPanelView.Blame.NOTATALL)
+//            return false;
         return true;
     }
 
@@ -180,14 +189,162 @@ public final class XFPanelEntry {
     public Boolean getBuilding() {
         return this.building;
     }
-
+    
     /**
      * @return the URL for the last build
      */
     public String getUrl() {
-        return this.job.getUrl() + "lastBuild";
+//        return this.job.getUrl() + "lastBuild";
+        return this.job.getUrl();
     }
+     
+    public String getLastJobUrl() {
+    	return this.job.getUrl() + "lastBuild";
+  }
 
+  /*** Pooja -- start **/
+    
+    public String getCurrentTag(){
+// 	   String pageUrl = this.job.getAbsoluteUrl()+"/lastBuild"+"/parameters/";   //getUrl() wont work because Pagesource doesnt work on partial url
+ 	  String pageUrl = this.job.getAbsoluteUrl()+"lastBuild"+"/parameters/";   //Sanjay, getAbsoluteUrl() by default gives / 
+ 	   if(StringUtils.isEmpty(pageUrl))
+ 		   return "in current tag, null/empty pageUrl";
+ 	   String pageSource;
+ 	   String tag;
+ 	   try {
+ 		   pageSource = getPageSource(pageUrl);
+
+ 		   if(StringUtils.isEmpty(pageSource))
+ 			   return "in current tag, null/empty pageSource";
+// 		  String regExTag = "<td class=\"setting-name\">tagtotest<\\/td>[\\s\\S]*?value=\"([\\s\\S]*?)\"";
+ 		   String regExTag = "<td class=\"setting-name\">releaseToTest<\\/td>[\\s\\S]*?value=\"([\\s\\S]*?)\"";  //for inmobi, parameter releaseToTest
+ 		  tag = getStringAfterPattern(pageSource, regExTag, 1);
+ 		  tag = "Build# "+getLastCompletedBuildNumber()+" "+tag;
+ 		   return tag;
+ 	   } catch (Exception e) {
+ 		  tag= e.getMessage();
+ 	   }
+ 	return tag;
+  }
+
+    //sanjay, added method to get current env in which job executed
+    public String getCurrentEnv(){
+  	  String pageUrl = this.job.getAbsoluteUrl()+"lastBuild"+"/parameters/";    
+  	   if(StringUtils.isEmpty(pageUrl))
+  		   return "in current env, null/empty pageUrl";
+  	   String pageSource;
+  	   String env;
+  	   try {
+  		   pageSource = getPageSource(pageUrl);
+
+  		   if(StringUtils.isEmpty(pageSource))
+  			   return "in current env, null/empty pageSource";
+  		   String regExEnv = "<td class=\"setting-name\">env<\\/td>[\\s\\S]*?value=\"([\\s\\S]*?)\"";
+  		   env = getStringAfterPattern(pageSource, regExEnv, 1);
+
+  		   return env;
+  	   } catch (Exception e) {
+  		   env= e.getMessage();
+  	   }
+  	return env;
+   }
+    public String getCurrentJobUrl(){
+    	  String currentJobUrl = this.job.getUrl() + "lastBuild"; 
+    	  return currentJobUrl;
+    }
+    
+ 	public String getLastSucceedNo(){
+ 		return String.valueOf(this.job.getLastStableBuild().getNumber());
+ 		
+ 	}
+ 	
+ 	public String getLastSucceedTag() throws IOException {
+ 		int lastSuccessfulNo = this.job.getLastStableBuild().getNumber();
+ 		if(lastSuccessfulNo<=0)
+ 			return "no successful build";
+ 		
+// 			String pageUrl = this.job.getAbsoluteUrl()+ "/"
+ 			String pageUrl = this.job.getAbsoluteUrl()+ //Sanjay, getAbsoluteUrl() by default gives /
+ 					+ this.job.getLastStableBuild().getNumber()
+ 					+ "/parameters/";
+ 			String pageSource = getPageSource(pageUrl);
+// 			String regExTag = "<td class=\"setting-name\">tagtotest<\\/td>[\\s\\S]*?value=\"([\\s\\S]*?)\"";
+ 			String regExTag = "<td class=\"setting-name\">releaseToTest<\\/td>[\\s\\S]*?value=\"([\\s\\S]*?)\"";
+ 			String tag = getStringAfterPattern(pageSource, regExTag, 1);
+ 			
+ 			String regExEnv = "<td class=\"setting-name\">env<\\/td>[\\s\\S]*?value=\"([\\s\\S]*?)\"";
+ 			String env = getStringAfterPattern(pageSource, regExEnv, 1);
+ 			tag =StringUtils.isEmpty(tag)?"":tag+" in "+env;
+ 			tag = " Build# "+getLastSucceedBuildNumber()+" "+tag;
+ 			return tag;
+ 	}
+ 	
+ 	//sanjay added to make the last build as link
+ 	public String getLastSucceedBuildUrl() throws IOException {
+ 		int lastSuccessfulNo = this.job.getLastStableBuild().getNumber();
+ 		if(lastSuccessfulNo<=0)
+ 			return "no successful build";
+ 			String pageUrl = this.job.getAbsoluteUrl()+ 
+ 					+ this.job.getLastStableBuild().getNumber()
+ 					+ "/parameters/";
+ 			return pageUrl;
+ 	}
+ 	
+ 	//sanjay added to make the last build as link
+ 	 	public int getLastSucceedBuildNumber() throws IOException {
+ 	 		int lastSuccessfulNo = this.job.getLastStableBuild().getNumber();
+ 	 		return lastSuccessfulNo;
+ 	}
+ 	 
+     public  String getStringAfterPattern(String sentence, String pattern,
+ 			int groupIndex) {
+ 		String str = "";
+ 		Pattern p = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
+ 		Matcher m = p.matcher(sentence);
+ 		while (m.find()) {
+ 			str = m.group(groupIndex);
+ 			//System.out.println("found-" + str); // for try
+ 		}
+ 		return str.trim();
+ 	}
+     
+     private static String getPageSource(String urlStr) throws IOException {
+    	
+ 			String name = "sanjay";
+ 			String password = "12345";
+
+ 			String authString = name + ":" + password;
+ 			
+ 			byte[] authEncBytes = Base64.encodeBase64(authString.getBytes());
+ 			String authStringEnc = new String(authEncBytes);
+ 			
+
+ 			URL url = new URL(urlStr);
+ 			URLConnection urlConnection = url.openConnection();
+ 			urlConnection.setRequestProperty("Authorization", "Basic " + authStringEnc);
+ 			InputStream is = urlConnection.getInputStream();
+ 			InputStreamReader isr = new InputStreamReader(is);
+
+ 			int numCharsRead;
+ 			char[] charArray = new char[1024];
+ 			StringBuffer sb = new StringBuffer();
+ 			while ((numCharsRead = isr.read(charArray)) > 0) {
+ 				sb.append(charArray, 0, numCharsRead);
+ 			}
+
+ 		return sb.toString();
+ 	}
+     /**
+      * @return the URL for the workspace
+      */
+     public String getWsurl() {
+         return this.job.getUrl() + "ws";
+         
+     }
+
+ /*** Pooja -- end **/
+
+    
     /**
      * @return a list will all the currently building runs for this job.
      */
@@ -307,7 +464,7 @@ public final class XFPanelEntry {
     public String convertCulpritsToString(HashSet<User> input) {
         String output = "";
         Iterator<User> it = input.iterator();
-
+        
         int i=0;
         for (; it.hasNext(); i++) {
             if (i < getView().getMaxAmmountOfResponsibles()) {
@@ -321,12 +478,12 @@ public final class XFPanelEntry {
         }
         if (!output.isEmpty())
             return output;
-        return " - ";
+        return "-- ";
     }
 
-    public String getCulprits() {
+    public String getCulprits() throws IOException {
         if (getView().BlameState == Blame.ONLYFIRSTFAILEDBUILD) {
-            Run<?, ?> run = this.job.getLastStableBuild(); //getLastSuccessfulBuild();
+        	Run<?, ?> run = this.job.getLastStableBuild(); //getLastSuccessfulBuild();
             if ( run == null ){ // if there aren't any successful builds
                 run = this.job.getFirstBuild(); 
             } else {
@@ -342,11 +499,19 @@ public final class XFPanelEntry {
                 AbstractBuild<?, ?> lastFailedBuild = (AbstractBuild<?, ?>) run;
                 return convertCulpritsToString( getCulpritFromBuild( lastFailedBuild ) );
             }
-        } else if (getView().BlameState == Blame.EVERYINVOLVED) {
+        } else{
+//sanjay        } else if (getView().BlameState == Blame.EVERYINVOLVED) {
             AbstractBuild<?, ?> build = this.getLastBuild();
             if (build != null) {
-	            HashSet<User> BlameList = new HashSet<User>( build.getCulprits() );
-	            return convertCulpritsToString( BlameList );
+	            //HashSet<User> BlameList = new HashSet<User>( build.getCulprits());
+	            //return convertCulpritsToString( BlameList );
+	            String console =  ""+build.getLog(20000).toString();
+	            if(console.contains("Aborted by")){
+	            	return "Aborted by: "+console.split("Aborted by")[1].split(",")[0];
+	            }
+	            console = console.contains("Started by timer")?"Timer":console.split("Started by user")[1].split(",")[0];
+	            return  "Started by: "+console;
+	            
             }
         }
         return " -";
@@ -446,6 +611,7 @@ public final class XFPanelEntry {
 
     public String getClaimInfoByTestCases(){
         hudson.tasks.junit.TestResult testResult = getClaimedTestCases();
+       
         if (testResult == null) {
             return "";
         }
@@ -453,21 +619,22 @@ public final class XFPanelEntry {
         String claimers = "";
         Set<String> claimerNames = new HashSet<String>();
         for (CaseResult result : testResult.getFailedTests()) {
-            ClaimTestAction claimTestAction = result.getTestAction(ClaimTestAction.class);
-            if (claimTestAction != null) {
-                if (claimTestAction.isClaimed() == true) {
-                    String claimer = claimTestAction.getClaimedBy();
-                    if (claimer != null && claimer != "") {
-                        if (!claimerNames.contains(claimer)) {
-                            claimerNames.add(claimer);
-                            if (claimers != "") {
-                                claimers += ", ";
-                            }
-                            claimers += claimer;
-                        }
-                    }
-                }
-            }
+        	    ClaimTestAction claimTestAction = result.getTestAction(ClaimTestAction.class);
+	            if (claimTestAction != null) {
+	                if (claimTestAction.isClaimed() == true) {
+	                    String claimer = claimTestAction.getClaimedBy();
+	                    if (claimer != null && claimer != "") {
+	                        if (!claimerNames.contains(claimer)) {
+	                            claimerNames.add(claimer);
+	                            if (claimers != "") {
+	                                claimers += ", ";
+	                            }
+	                            claimers += claimer;
+	                        }
+	                    }
+	                }
+	            }
+        	
         }
         if (claimers == null || claimers == "") {
             String buildClaimer = "";
@@ -620,6 +787,4 @@ public final class XFPanelEntry {
     public XFPanelView getView() {
 			return view;
 		}
-
-
 }

@@ -1,7 +1,7 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
 	xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form"
 	xmlns:i="jelly:fmt">
-	<table style="width: 100%;">
+	<table style="width: 99%;">
 		<j:forEach var="run" items="${job.buildsInProgress}">
 			<tr>
 				<td style="font-size: ${infoFont}; font-weight:bold; white-space: nowrap;">
@@ -16,8 +16,7 @@
 							<j:when test="${run.executor.progress lt 0}">
 								<tbody>
 									<tr>
-										<td class="progress-bar-left"
-											style="width:100% height: ${infoFont}px;" />
+										 <td class="progress-bar-left" style="width:100% height: ${infoFont}px;" /> 
 									</tr>
 								</tbody>
 							</j:when>
@@ -44,5 +43,65 @@
 				${job.getClaimInfoByTestCases()}
 			</div>
 		</j:if>
+	</j:if>	
+	
+	<!-- sanjay -->
+	<j:if test="${job.broken == false}">
+		<!-- NormalClaim = !(claim enabled && replaceResponsibles enabled && showResponsibles enabled) -->
+		<j:set var="normalClaim" value="true" />
+		<j:if test="${job.showResponsibles == true}">
+			<j:if test="${it.replaceResponsibles == true}">
+				<j:if test="${it.showClaimInfo == true}">
+					<j:set var="normalClaim" value="false" />
+				</j:if>
+			</j:if>
+		</j:if>
+
+		<j:choose>
+			<j:when test="${normalClaim == true}">
+				<j:if test="${job.showResponsibles == true}">
+					<div style="width 80%; overflow: hidden;">
+						${it.responsiblesTopic} ${job.culprits}
+					</div>
+				</j:if>
+				<j:if test="${it.showClaimInfo == true}">
+					<div style="color: ${job.color}; font-size: ${claimFont}; overflow: hidden;">
+						<j:if test="${job.isClaimed() == true}" >
+							Claimed by: ${job.claimInfo} 
+						</j:if>
+					</div>
+				</j:if>
+			</j:when>
+
+			<j:otherwise>
+				<j:if test="${job.isClaimed() == true}" >
+					<div style="color: ${job.color}; font-size: ${claimFont}; overflow: hidden;">
+						<j:if test="${job.isClaimed() == true}" >
+							Claimed by: ${job.claimInfo} 
+						</j:if>
+					</div>
+				</j:if>
+
+				<j:if test="${job.isClaimed() == false}">
+					<div style="overflow: hidden;"  >
+						${it.responsiblesTopic} ${job.culprits}
+					</div>
+				</j:if>
+			</j:otherwise>
+		</j:choose>
+
+		<j:if test="${it.showTimeStamp == true}">
+			<div>
+			<j:if test="${unBuilt == false}">
+				Built ${job.completionTimestampString} ago
+			</j:if>
+			
+			<!-- unbuilt build -->
+			<j:if test="${unBuilt == true}">
+				${it.lastBuildTimePreFix} -
+			</j:if>
+			</div>
+		</j:if>
 	</j:if>
+	
 </j:jelly>

@@ -9,15 +9,32 @@
 	<j:set var="claimTopMargin" value="${from.guiFailFont*0.2}px" />
 
 	<!-- JOB div -->
-	<a href="${rootURL}/${job.url}" style="font-style:normal; font-weight:bold;">
-		<div align="center" style="margin: 4px; background-color:${job.backgroundColor}; -moz-border-radius:10px; width:${width}; height:${height}; float: ${float}" tooltip="${job.name}">
+	<div id="div-1" align="center" style="width:${width}; height:260%; min-height: 180px; float: ${float}; border-radius:15px;margin: 4px; background-color:${job.backgroundColor}; -moz-border-radius:10px;" tooltip="${job.name}">
+		<div class="tagsParent">  <!--pooja -->
+			 <div class="env">
+			 	<span class="tagLabel">Current release tested : </span>
+			 	<a href="${job.currentJobUrl}" target="_blank">
+				 	<span class="tagValue">${job.currentTag}</span>	 	
+			 	</a>
+			 </div>
+			 <div class="env"><span class="envLabel">Current env : </span><span class="tagValue">${job.currentEnv}</span></div>
+		     <div class="lastTag">Last successfully passed job : 
+		     	<a href="${job.lastSucceedBuildUrl}" target="_blank">
+		     		<span class="tagValue">${job.lastSucceedTag}</span>
+		     	</a>
+		     </div>
+	   </div>
+   
+	<!-- <a target="_blank" href="${rootURL}/${job.url}" style="font-style:normal; font-weight:bold; height:${height};"> -->
+		<div>
 			<j:set var="failColor" value="#00FF00" />
 			<j:if test="${job.failCount > 0}">
-				<j:set var="failColor" value="#FF0000" />
+				<j:set var="failColor" value="darkred" />
 			</j:if>
 
-			<!-- Right side bar  -->
-			<div align="center" style="width: 20%; height:100%; text-align=center; color: ${failColor}; 
+			<!-- Right side bar  --> <!--juery ui -pooja <link rel="stylesheet" href="//code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css"></link> <script src="//code.jquery.com/jquery-1.10.2.js"></script><script src="//code.jquery.com/ui/1.11.1/jquery-ui.js"></script>  -->
+  
+  			<div id="div-2" align="center" style="width: 20%; height:100%; text-align=center; color: ${failColor}; 
 				font-size: ${failFont}; font-weight:bold; overflow:hidden; white-space: nowrap; float:right;">
 
 				<j:if test="${job.broken == true}">
@@ -54,7 +71,7 @@
 								</j:if>
 
 								<j:if test="${jobClaimed == false}" >
-									${job.getNumberOfTests()}
+								<!-- 	${job.getNumberOfTests()} sanjay-->
 									<j:if test="${job.isBuildSuccessful() == false}" >
 										<div style="color: ${failColor}; font-size: ${claimFont}; margin-top: -${claimTopMargin};">
 											#of unclaimed
@@ -63,12 +80,12 @@
 								</j:if>
 							</j:if>
 							<j:if test="${it.ReplaceNumberOfTestCases == false}">
-								${job.getNumberOfTests()}
+								<!-- 	${job.getNumberOfTests()} sanjay-->
 							</j:if>
 						</j:when>
 
 						<j:otherwise>
-							${job.getNumberOfTests()}
+							<!-- 	${job.getNumberOfTests()} sanjay-->
 						</j:otherwise>
 					</j:choose>
 				</j:if>
@@ -77,12 +94,14 @@
 			</div>
 			
 			<!-- Left side bar -->
-			<div style="width: 80%; height:100%; white-space: nowrap; overflow:hidden;  color: ${job.color};" >
+			<div id="div-3" style="margin:1%;width: 80%; height:100%; white-space: nowrap; overflow:hidden;  color: ${job.color};" >
 
 				<!-- Topic bar -->
-				<div class="fadeHiddenText" style ="font-size: ${jobFont};">
-					<span><u>${job.name}</u></span>
-				</div>
+				<a target="_blank" href="${rootURL}/${job.url}" style="font-style:normal; font-weight:bold; height:${height}; color: inherit;">
+					<div class="fadeHiddenText" style ="font-size: ${jobFont};">
+						<span><u>${job.name}</u></span>
+					</div>
+				</a>
 
 				<!-- Plain text bar -->
 				<div valign="top" >
@@ -93,7 +112,7 @@
 					</j:if>
 					<j:if test="${job.building == true}">
 						<div class="fadeHiddenText" style="font-size: ${buildFont};">
-							<st:include page="building.jelly" />
+							<st:include page="building.jelly" />							
 						</div>
 					</j:if>
 					<j:if test="${it.showBrokenBuildCount == true}">
@@ -104,5 +123,15 @@
 				</div>
 			</div>
 		</div>
-	</a>
+	<!-- </a> -->
+	<div id="div-4" style=""> <!--div style="margin:5px;background:#aaa;border-radius:40px;overflow:hidden;" -->
+      <a class="btn" target="_blank" href="${rootURL}/${job.currentJobUrl}//Email_HTML_Report/" style="float:left;">Detailed Report</a>
+     <!-- <a class="btn" target="_blank" href="${resURL}/${job.currentJobUrl}/artifact/RsoUiFw/FailedTestCasesScreenshot/" style="float:left;">Screenshots</a> -->
+      <a class="btn" target="_blank" href="${rootURL}/${job.currentJobUrl}" style="float:left;">Screenshots</a>
+      <a class="btn" target="_blank" href="${rootURL}/${job.currentJobUrl}/console" style="float:left;">Console</a>
+	  <a class="btn" target="_blank" href="${rootURL}/${job.url}configure" style="float:left;">Configure</a>
+	  <a class="btn" target="_blank" href="${rootURL}/${job.url}build" style="float:left;">Build with Parameters</a>
+	  <a class="btn" target="_blank" href="${rootURL}/${job.url}lastCompletedBuild/rebuild/parameterized" style="float:left;">Rebuild Last</a>
+     </div>
+ </div>
 </j:jelly>

@@ -39,50 +39,56 @@ import org.kohsuke.stapler.StaplerRequest;
  */
 public class XFPanelView extends ListView {
 
-    private Integer numColumns = 2;
-    private Integer refresh = 3;
-    private Boolean fullHD = false;
-    private Integer guiHeight = 205;
-    private Integer guiJobFont = 80;
-    private Integer guiFailFont = 150;
-    private Integer guiInfoFont = 30;
-    private Integer guiBuildFont = 30;
-    private Integer guiClaimFont = 20;
+	  private Integer numColumns = 2;
+	    private Integer refresh = 3;
+	    private Boolean fullHD = false;
+	    //private Integer guiHeight = 205; //sanjay, changed height to 80 to get the job panel fit to browser
+//	    private Integer guiHeight = 80;
+//	    private Integer guiJobFont = 80;
+//	    private Integer guiFailFont = 150;
+//	    private Integer guiInfoFont = 30;
+//	    private Integer guiBuildFont = 30;
+//	    private Integer guiClaimFont = 20;
+	    private Integer guiHeight = 60;
+	    private Integer guiJobFont = 20;
+	    private Integer guiFailFont = 30;
+	    private Integer guiInfoFont = 15;
+	    private Integer guiBuildFont = 15;
+	    private Integer guiClaimFont = 20;
 
-    private Boolean showDescription = false;
-    private Boolean showBrokenBuildCount = false;
-    private Boolean showZeroTestCounts = true;
-    private Boolean sortDescending = false;
-    private Boolean showTimeStamp = true;
-    private Boolean enableAutomaticSort = true;
-    private Boolean manualSort = false;
-    private Boolean showClaimInfo = true;
-    private Boolean showWarningIcon = false;
-    private Boolean replaceResponsibles = true;
-    private Boolean autoResizeEntryHeight = true;
-    private Boolean hideSuccessfulBuilds = false;
-    private Boolean replaceNumberOfTestCases = true;
-    private Boolean showClaimInfoInUnstable = true;
-    private transient List<XFPanelEntry> entries;
+	    private Boolean showDescription = false;
+	    private Boolean showBrokenBuildCount = false;
+	    private Boolean showZeroTestCounts = true;
+	    private Boolean sortDescending = false;
+	    private Boolean showTimeStamp = true;
+	    private Boolean enableAutomaticSort = true;
+	    private Boolean manualSort = false;
+	    private Boolean showClaimInfo = true;
+	    private Boolean showWarningIcon = false;
+	    private Boolean replaceResponsibles = true;
+	    private Boolean autoResizeEntryHeight = true;
+	    private Boolean hideSuccessfulBuilds = false;
+	    private Boolean replaceNumberOfTestCases = true;
+	    private Boolean showClaimInfoInUnstable = true;
+	    private transient List<XFPanelEntry> entries;
 
-    protected XFPanelColors colors;
+	    protected XFPanelColors colors;
 
-    protected transient Map<hudson.model.Queue.Item, Integer> placeInQueue = new HashMap<hudson.model.Queue.Item, Integer>();
-    protected Map<String, Integer> priorityPerJob = new HashMap<String, Integer>();
+	    protected transient Map<hudson.model.Queue.Item, Integer> placeInQueue = new HashMap<hudson.model.Queue.Item, Integer>();
+	    protected Map<String, Integer> priorityPerJob = new HashMap<String, Integer>();
 
-    protected enum Blame { NOTATALL, ONLYLASTFAILEDBUILD, ONLYFIRSTFAILEDBUILD, EVERYINVOLVED }
-    protected Blame BlameState = Blame.EVERYINVOLVED;
+	    protected enum Blame { NOTATALL, ONLYLASTFAILEDBUILD, ONLYFIRSTFAILEDBUILD, EVERYINVOLVED }
+	    protected Blame BlameState = Blame.EVERYINVOLVED;
 
-    private Integer maxAmmountOfResponsibles = 1;
-    private String responsiblesTopic = "Responsible(s): ";
-    private String lastBuildTimePreFix = "last successful: ";
+	    private Integer maxAmmountOfResponsibles = 1;
+	    private String responsiblesTopic = "Started by: ";
+	    private String lastBuildTimePreFix = "last successful: ";
 
-    private String successfulBuildColor = "#7E7EFF";
-    private String unstableBuildColor = "#FFC130";
-    private String brokenBuildColor = "#FF0000";
-    private String otherBuildColor = "#CCCCCC";
-    private String buildFontColor = "#FFFFFF";
-    
+	    private String successfulBuildColor = "A9D79D";
+	    private String unstableBuildColor = "#FFC130";
+	    private String brokenBuildColor = "#FF0000";
+	    private String otherBuildColor = "#B5B5B5";
+	    private String buildFontColor = "#FFFFFF";    
 		private String jobNameReplaceRegExp;
     private String jobNameReplacement;
     private Pattern jobNameReplaceRegExpPattern;
@@ -214,7 +220,8 @@ public class XFPanelView extends ListView {
         if (this.responsiblesTopic == null){
             return "";
         }
-        return this.responsiblesTopic;
+//        return this.responsiblesTopic;  //sanjay
+        return ""; //sending blank and setting it in XFPanelEntry based on console output for started by or aborted by
     }
     public Boolean getHideSuccessfulBuilds(){
         return this.hideSuccessfulBuilds;
@@ -226,7 +233,7 @@ public class XFPanelView extends ListView {
         return defaultColor;
     }
     public String getSuccessfulBuildColor(){
-        return validateColor( successfulBuildColor, "7E7EFF");
+        return validateColor( successfulBuildColor, "A9D79D");
     }
     public String getUnstableBuildColor(){
         return validateColor( unstableBuildColor, "FFC130");
@@ -328,13 +335,15 @@ public class XFPanelView extends ListView {
             	  xfPanelEntry.init();
             	  ents.add(xfPanelEntry);
             }
-            if ( enableAutomaticSort == true ){
-                Collections.sort(ents, new selectComparator() );
-            }
-
-            if (this.getSortDescending()) {
-                Collections.reverse(ents);
-            }
+            
+            //sanjay- commented below sorting block to display jobs in same order as selected from xfpanel preview in the jenkins config
+//            if ( enableAutomaticSort == true ){
+//                Collections.sort(ents, new selectComparator() );
+//            }
+//
+//            if (this.getSortDescending()) {
+//                Collections.reverse(ents);
+//            }
 
             this.entries = ents;
             return this.entries;
@@ -712,7 +721,7 @@ public static final class XFPanelColors {
     }
 
     public static final XFPanelColors DEFAULT = 
-        new XFPanelColors("#7E7EFF", "#FFFFFF", "#FFC130", "#FFFFFF", "#FF0000", "#FFFFFF", "#CCCCCC", "#FFFFFF");
+        new XFPanelColors("#A9D79D", "#FFFFFF", "#FFC130", "#FFFFFF", "#FF0000", "#FFFFFF", "#CCCCCC", "#FFFFFF");
      /* okBG , okFG , failedBG , failedFG , brokenBG , brokenFG , otherBG ,
      * otherFG FFFFFF = white FF0000 = red 7E7EFF = blue FFC130 = yellow
      * 215E21 = huntergreen #267526 = another green
